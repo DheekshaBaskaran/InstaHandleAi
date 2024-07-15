@@ -1,4 +1,4 @@
-from textCategortization import find_closest_match
+from textCategortization import chooseCategory
 from imgDesc import query
 import os
 
@@ -16,7 +16,7 @@ def categorize(saved_images):
     combined_descriptions = " ".join(descriptions)
 
     # Step 3: Categorize the combined descriptions
-    closest_phrase = find_closest_match(combined_descriptions)
+    closest_phrase = chooseCategory(combined_descriptions)
 
     print(f"Combined Descriptions: {combined_descriptions}")
     print(f"Closest Match: {closest_phrase}")
