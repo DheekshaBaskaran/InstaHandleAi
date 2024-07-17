@@ -23,6 +23,7 @@ categories = [
     "Community Building", "Entertainment", "Work", "Reviews", "Family"
 ]
 
+
 def fetch_instagram_posts(username, save_directory="temp/images", apify_token=APIFY_TOKEN):
     client = ApifyClient(apify_token)
 
@@ -66,6 +67,7 @@ def fetch_instagram_posts(username, save_directory="temp/images", apify_token=AP
 
     return saved_images, captions  # Return the list of saved images and captions
 
+
 def user_message(inquiry):
     return f"""
     You are a social media analysis bot. Your task is to assess the content of an Instagram post caption
@@ -82,19 +84,48 @@ def user_message(inquiry):
     Inquiry: {inquiry}
     """
 
+
 def run_mistral(user_message, model="mistral-medium"):
-    client = MistralClient(api_key=MISTRAL_API_KEY)
-    messages = [ChatMessage(role="user", content=user_message)]
-    chat_response = client.chat(model=model, messages=messages)
-    return chat_response.choices[0].message.content
+    """
+    Runs the Mistral AI chat completion model with the provided user message and model.
+
+    Parameters:
+    - user_message (str): The message to be processed by the Mistral AI.
+    - model (str): The model to be used for the chat completion (default is "mistral-medium").
+
+    Returns:
+    - str: The content of the chat response.
+    """
+    client = MistralClient(api_key=MISTRAL_API_KEY)  # Initialize the Mistral client with the API key
+    messages = [ChatMessage(role="user", content=user_message)]  # Create a list of chat messages
+    chat_response = client.chat(model=model, messages=messages)  # Get the chat response from the Mistral AI
+    return chat_response.choices[0].message.content  # Return the content of the first choice
+
 
 def choose_category(input_text):
-    return run_mistral(user_message(input_text))
+    """
+    Chooses a category for the given input text by running the Mistral AI model.
+
+    Parameters:
+    - input_text (str): The input text to be categorized.
+
+    Returns:
+    - str: The chosen category for the input text.
+    """
+    return run_mistral(
+        user_message(input_text))  # Run the Mistral AI model with the user message and return the category
+
 
 if __name__ == "__main__":
-    username = input("Enter the Instagram username to scrape: ")
-    images, captions = fetch_instagram_posts(username)
-    caption_categories = [choose_category(caption) for caption in captions]
+    username = input("Enter the Instagram username to scrape: ")  # Prompt the user to enter the Instagram username
+    images, captions = fetch_instagram_posts(
+        username)  # Fetch the Instagram posts (images and captions) for the given username
 
-    for idx, caption in enumerate(captions):
-        print(f"Caption {idx + 1}: {caption}\nCategory: {caption_categories[idx]}")
+    # Aggregate all captions into one text
+    aggregated_captions = " ".join(captions)
+
+    # Get a single category for the aggregated captions
+    category = choose_category(aggregated_captions)
+
+    # Print the aggregated captions and the chosen category
+    print(f"Aggregated Captions: {aggregated_captions}\nCategory: {category}")
