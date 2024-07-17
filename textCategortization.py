@@ -1,5 +1,6 @@
 import os
 from mistralai.client import MistralClient
+#Mistral API is used to analyze content of an  Instagram post and classify it into one of the predefined categories
 from mistralai.models.chat_completion import ChatMessage
 
 # Set Mistral API key
