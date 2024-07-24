@@ -134,9 +134,14 @@ def determine_gender(input_text):
     - input_text (str): The input text to determine gender.
 
     Returns:
-    - str: The determined gender for the input text.
+    - str: The determined gender for the input text, or "Other" if no gender is determined.
     """
-    return run_openai(user_message(input_text, for_gender=True))
+    result = run_openai(user_message(input_text, for_gender=True))
+    # Validate and return the gender or "Other" if the result is not valid
+    if result in ["Male", "Female"]:
+        return result
+    else:
+        return "Other"
 
 
 if __name__ == "__main__":
@@ -149,7 +154,7 @@ if __name__ == "__main__":
     # Get a single category for the aggregated captions
     category = choose_category(aggregated_captions)
 
-    # Determine gender for the aggregated captions
+    # Determine gender from the aggregated captions
     gender = determine_gender(aggregated_captions)
 
     # Print the aggregated captions, the chosen category, and the determined gender
