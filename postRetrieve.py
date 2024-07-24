@@ -2,14 +2,13 @@ import requests
 import os
 import shutil
 from apify_client import ApifyClient
-from mistralai.client import MistralClient
-from mistralai.models.chat_completion import ChatMessage
+import openai
 
 # Set your Apify API token
 APIFY_TOKEN = "apify_api_9s3GF9roqPDUGWx6xhVc1V4skwzSSr4yVKJ6"
 
-# Set your Mistral API key
-MISTRAL_API_KEY = "gTkvXwvzuMY7Rvi92LXGoqqnRK0WVj4u"
+# Set your OpenAI API key
+OPENAI_API_KEY = "sk-None-rmy5J5LWV6LkTXPOckvNT3BlbkFJG6uZYkWWXYVRIhP5v1b4"
 
 # Categories for categorization
 categories = [
@@ -19,10 +18,9 @@ categories = [
     "Design", "Education", "Business", "Finance", "Marketing", "Lifestyle",
     "Parenting", "Cooking", "Gardening", "Crafts", "Shopping", "Events",
     "Real Estate", "Hiking", "Yoga", "Sustainability", "Environment",
-    "Politics", "History", "Science", "Motivation", "Influencers", "Celebrities",
+    "Politics", "History", "Science", "Motivation", "Celebrities",
     "Community Building", "Entertainment", "Work", "Reviews", "Family"
 ]
-
 
 def fetch_instagram_posts(username, save_directory="temp/images", apify_token=APIFY_TOKEN):
     client = ApifyClient(apify_token)
@@ -68,43 +66,56 @@ def fetch_instagram_posts(username, save_directory="temp/images", apify_token=AP
     return saved_images, captions  # Return the list of saved images and captions
 
 
-def user_message(inquiry):
-    return f"""
-    You are a social media analysis bot. Your task is to assess the content of an Instagram post caption
-    and categorize it into one of the following predefined categories:
+def user_message(inquiry, for_gender=False):
+    if for_gender:
+        return f"""
+        You are a social media analysis bot. Your task is to assess the content of an Instagram post caption
+        and determine the likely gender of the person based on the content. Only respond with "Male" or "Female".
 
-    {', '.join(categories)}
+        Inquiry: {inquiry}
+        """
+    else:
+        return f"""
+        You are a social media analysis bot. Your task is to assess the content of an Instagram post caption
+        and categorize it into one of the following predefined categories:
 
-    If the text doesn't fit into any of the above categories, classify it as:
-    Other
+        {', '.join(categories)}
 
-    You will only respond with the predefined category. Do not include the word "Category".
-    Do not provide explanations or notes. Only return one category and nothing else.
+        If the text doesn't fit into any of the above categories, classify it as:
+        Other
 
-    Inquiry: {inquiry}
+        You will only respond with the predefined category. Do not include the word "Category".
+        Do not provide explanations or notes. Only return one category and nothing else.
+
+        Inquiry: {inquiry}
+        """
+
+
+def run_openai(user_message, model="gpt-4o-mini"):
     """
-
-
-def run_mistral(user_message, model="mistral-medium"):
-    """
-    Runs the Mistral AI chat completion model with the provided user message and model.
+    Runs the OpenAI chat completion model with the provided user message and model.
 
     Parameters:
-    - user_message (str): The message to be processed by the Mistral AI.
-    - model (str): The model to be used for the chat completion (default is "mistral-medium").
+    - user_message (str): The message to be processed by the OpenAI.
+    - model (str): The model to be used for the chat completion (default is "gpt-4").
 
     Returns:
     - str: The content of the chat response.
     """
-    client = MistralClient(api_key=MISTRAL_API_KEY)  # Initialize the Mistral client with the API key
-    messages = [ChatMessage(role="user", content=user_message)]  # Create a list of chat messages
-    chat_response = client.chat(model=model, messages=messages)  # Get the chat response from the Mistral AI
-    return chat_response.choices[0].message.content  # Return the content of the first choice
+    openai.api_key = OPENAI_API_KEY  # Set the OpenAI API key
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": user_message}
+        ]
+    )
+    return response['choices'][0]['message']['content'].strip()
 
 
 def choose_category(input_text):
     """
-    Chooses a category for the given input text by running the Mistral AI model.
+    Chooses a category for the given input text by running the OpenAI model.
 
     Parameters:
     - input_text (str): The input text to be categorized.
@@ -112,14 +123,25 @@ def choose_category(input_text):
     Returns:
     - str: The chosen category for the input text.
     """
-    return run_mistral(
-        user_message(input_text))  # Run the Mistral AI model with the user message and return the category
+    return run_openai(user_message(input_text))
+
+
+def determine_gender(input_text):
+    """
+    Determines the gender for the given input text by running the OpenAI model.
+
+    Parameters:
+    - input_text (str): The input text to determine gender.
+
+    Returns:
+    - str: The determined gender for the input text.
+    """
+    return run_openai(user_message(input_text, for_gender=True))
 
 
 if __name__ == "__main__":
     username = input("Enter the Instagram username to scrape: ")  # Prompt the user to enter the Instagram username
-    images, captions = fetch_instagram_posts(
-        username)  # Fetch the Instagram posts (images and captions) for the given username
+    images, captions = fetch_instagram_posts(username)  # Fetch the Instagram posts (images and captions) for the given username
 
     # Aggregate all captions into one text
     aggregated_captions = " ".join(captions)
@@ -127,5 +149,8 @@ if __name__ == "__main__":
     # Get a single category for the aggregated captions
     category = choose_category(aggregated_captions)
 
-    # Print the aggregated captions and the chosen category
-    print(f"Aggregated Captions: {aggregated_captions}\nCategory: {category}")
+    # Determine gender for the aggregated captions
+    gender = determine_gender(aggregated_captions)
+
+    # Print the aggregated captions, the chosen category, and the determined gender
+    print(f"Aggregated Captions: {aggregated_captions}\nCategory: {category}\nGender: {gender}")

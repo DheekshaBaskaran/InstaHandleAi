@@ -1,6 +1,7 @@
 from textCategortization import chooseCategory
 from imgDesc import query
 import os
+import re
 
 
 
