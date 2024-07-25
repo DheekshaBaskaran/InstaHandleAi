@@ -4,10 +4,10 @@ import shutil
 from apify_client import ApifyClient
 import openai
 
-# Set your Apify API token
+# Apify API token
 APIFY_TOKEN = "apify_api_9s3GF9roqPDUGWx6xhVc1V4skwzSSr4yVKJ6"
 
-# Set your OpenAI API key
+# OpenAI API key
 OPENAI_API_KEY = "sk-proj-1yjj1KDzDA3Z71HWrQG5T3BlbkFJaIiO46kL1oNV7kOmkdjt"
 
 
