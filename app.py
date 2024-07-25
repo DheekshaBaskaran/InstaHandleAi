@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template_string
-from postRetrieve import choose_category, determine_gender, fetch_instagram_posts
+from postRetrieve import choose_category, determine_gender, determine_location, fetch_instagram_posts
 
 app = Flask(__name__)
 
@@ -24,17 +24,18 @@ form_html = '''
     <!-- Display the results from processing -->
     <p>Category: {{ category }}</p>
     <p>Gender: {{ gender }}</p>
+    <p>Location: {{ location }}</p>
     {% endif %}
   </body>
 </html>
 '''
-
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     influencer_name = None
     category = None
     gender = None
+    location = None
 
     # Check if the request method is POST (form submission)
     if request.method == 'POST':
@@ -54,14 +55,17 @@ def index():
 
             # Determine the gender based on the aggregated captions
             gender = determine_gender(aggregated_captions)
+
+            # Determine the location based on the aggregated captions
+            location = determine_location(aggregated_captions)
         except Exception as e:
             # Handle any errors that occur during processing
             category = "Error processing request"
             gender = str(e)  # Display the error message for debugging
+            location = "Unknown"
 
     # Render the HTML template with the provided results
-    return render_template_string(form_html, influencer_name=influencer_name, category=category, gender=gender)
-
+    return render_template_string(form_html, influencer_name=influencer_name, category=category, gender=gender, location=location)
 
 if __name__ == "__main__":
     # Run the Flask application in debug mode

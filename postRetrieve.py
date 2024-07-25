@@ -8,7 +8,8 @@ import openai
 APIFY_TOKEN = "apify_api_9s3GF9roqPDUGWx6xhVc1V4skwzSSr4yVKJ6"
 
 # Set your OpenAI API key
-OPENAI_API_KEY = "sk-None-rmy5J5LWV6LkTXPOckvNT3BlbkFJG6uZYkWWXYVRIhP5v1b4"
+OPENAI_API_KEY = "sk-proj-1yjj1KDzDA3Z71HWrQG5T3BlbkFJaIiO46kL1oNV7kOmkdjt"
+
 
 # Categories for categorization
 categories = [
@@ -66,11 +67,18 @@ def fetch_instagram_posts(username, save_directory="temp/images", apify_token=AP
     return saved_images, captions  # Return the list of saved images and captions
 
 
-def user_message(inquiry, for_gender=False):
+def user_message(inquiry, for_gender=False, for_location=False):
     if for_gender:
         return f"""
         You are a social media analysis bot. Your task is to assess the content of an Instagram post caption
         and determine the likely gender of the person based on the content. Only respond with "Male" or "Female".
+
+        Inquiry: {inquiry}
+        """
+    elif for_location:
+        return f"""
+        You are a social media analysis bot. Your task is to assess the content of an Instagram post caption
+        and determine the likely location of the person based on the content. Only respond with the location name.
 
         Inquiry: {inquiry}
         """
@@ -142,7 +150,19 @@ def determine_gender(input_text):
         return result
     else:
         return "Other"
+def determine_location(input_text):
+    """
+    Determines the location for the given input text by running the OpenAI model.
 
+    Parameters:
+    - input_text (str): The input text to determine location.
+
+    Returns:
+    - str: The determined location for the input text, or "Unknown" if no location is determined.
+    """
+    result = run_openai(user_message(input_text, for_location=True))
+    # Return the result or "Unknown" if the location is not determined
+    return result if result else "Unknown"
 
 if __name__ == "__main__":
     username = input("Enter the Instagram username to scrape: ")  # Prompt the user to enter the Instagram username
