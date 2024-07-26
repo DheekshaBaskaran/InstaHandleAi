@@ -10,7 +10,6 @@ APIFY_TOKEN = "apify_api_9s3GF9roqPDUGWx6xhVc1V4skwzSSr4yVKJ6"
 # OpenAI API key
 OPENAI_API_KEY = "sk-proj-1yjj1KDzDA3Z71HWrQG5T3BlbkFJaIiO46kL1oNV7kOmkdjt"
 
-
 # Categories for categorization
 categories = [
     "Fashion", "Food", "Travel", "Fitness", "Photography", "Art", "Beauty",
@@ -23,7 +22,7 @@ categories = [
     "Community Building", "Entertainment", "Work", "Reviews", "Family"
 ]
 
-def fetch_instagram_posts(username, save_directory="temp/images", apify_token=APIFY_TOKEN):
+def fetch_instagram_posts(username, apify_token=APIFY_TOKEN):
     client = ApifyClient(apify_token)
 
     # Prepare the input parameters for the Instagram Scraper
@@ -42,29 +41,7 @@ def fetch_instagram_posts(username, save_directory="temp/images", apify_token=AP
     display_urls = [item["displayUrl"] for item in dataset_items if "displayUrl" in item]
     captions = [item.get("caption", "No caption available.") for item in dataset_items]
 
-    # Check if the save directory exists, and delete it if it does (makes sure new pics don't get added along with old ones)
-    if os.path.exists(save_directory):
-        shutil.rmtree(save_directory)  # Remove the existing directory and its contents
-
-    # Create a new directory to save the images
-    os.makedirs(save_directory)
-
-    # Initialize a list to keep track of saved image names
-    saved_images = []
-    # Loop through each image URL to download the images
-    for index, url in enumerate(display_urls):
-        image_response = requests.get(url)
-        image_response.raise_for_status()
-
-        # Construct the image name and path for saving
-        image_name = f"{username}_{index + 1}.jpg"
-        image_path = os.path.join(save_directory, image_name)  # Full path to save the image
-
-        with open(image_path, 'wb') as image_file:
-            image_file.write(image_response.content)  # Write the image content to the file
-        saved_images.append(image_name)  # Add the saved image name to the list
-
-    return saved_images, captions  # Return the list of saved images and captions
+    return captions  # Return the list of captions
 
 
 def user_message(inquiry, for_gender=False, for_location=False):
@@ -105,7 +82,7 @@ def run_openai(user_message, model="gpt-4o-mini"):
 
     Parameters:
     - user_message (str): The message to be processed by the OpenAI.
-    - model (str): The model to be used for the chat completion (default is "gpt-4").
+    - model (str): The model to be used for the chat completion (default is "gpt-4o-mini").
 
     Returns:
     - str: The content of the chat response.
@@ -150,6 +127,7 @@ def determine_gender(input_text):
         return result
     else:
         return "Other"
+
 def determine_location(input_text):
     """
     Determines the location for the given input text by running the OpenAI model.
@@ -166,16 +144,22 @@ def determine_location(input_text):
 
 if __name__ == "__main__":
     username = input("Enter the Instagram username to scrape: ")  # Prompt the user to enter the Instagram username
-    images, captions = fetch_instagram_posts(username)  # Fetch the Instagram posts (images and captions) for the given username
+    captions = fetch_instagram_posts(username)  # Fetch the Instagram posts (captions) for the given username
 
     # Aggregate all captions into one text
     aggregated_captions = " ".join(captions)
 
-    # Get a single category for the aggregated captions
+    # Print the aggregated captions for verification
+    print("Aggregated Captions:", aggregated_captions)
+
+    # Categorize the aggregated captions
     category = choose_category(aggregated_captions)
+    print("Category:", category)
 
-    # Determine gender from the aggregated captions
+    # Determine the gender based on the aggregated captions
     gender = determine_gender(aggregated_captions)
+    print("Gender:", gender)
 
-    # Print the aggregated captions, the chosen category, and the determined gender
-    print(f"Aggregated Captions: {aggregated_captions}\nCategory: {category}\nGender: {gender}")
+    # Determine the location based on the aggregated captions
+    location = determine_location(aggregated_captions)
+    print("Location:", location)

@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template_string
-from postRetrieve import choose_category, determine_gender, determine_location, fetch_instagram_posts
+from postRetrieve import choose_category, determine_gender, fetch_instagram_posts, determine_location
 
 app = Flask(__name__)
 
@@ -45,7 +45,7 @@ def index():
         # Try to fetch Instagram posts and categorize the content
         try:
             # Fetch Instagram posts and captions for the given influencer
-            images, captions = fetch_instagram_posts(influencer_name)
+            captions = fetch_instagram_posts(influencer_name)
 
             # Aggregate all captions into a single text string
             aggregated_captions = " ".join(captions)
