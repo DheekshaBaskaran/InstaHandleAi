@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template_string
-from postRetrieve import choose_category, determine_gender, fetch_instagram_posts, determine_location
+from postRetrieve import choose_category, determine_gender, determine_location, fetch_instagram_posts
 
 app = Flask(__name__)
 
@@ -44,29 +44,28 @@ def index():
 
         # Try to fetch Instagram posts and categorize the content
         try:
-            # Fetch Instagram posts and captions for the given influencer
-            captions = fetch_instagram_posts(influencer_name)
+            # Fetch Instagram posts for the influencer
+            _, captions = fetch_instagram_posts(influencer_name)
 
-            # Aggregate all captions into a single text string
+            # Aggregate captions into one text
             aggregated_captions = " ".join(captions)
 
-            # Determine the category of the aggregated captions
+            # Choose a category based on the aggregated captions
             category = choose_category(aggregated_captions)
 
-            # Determine the gender based on the aggregated captions
+            # Determine gender based on the aggregated captions
             gender = determine_gender(aggregated_captions)
 
-            # Determine the location based on the aggregated captions
+            # Determine location based on the aggregated captions
             location = determine_location(aggregated_captions)
-        except Exception as e:
-            # Handle any errors that occur during processing
-            category = "Error processing request"
-            gender = str(e)  # Display the error message for debugging
-            location = "Unknown"
 
-    # Render the HTML template with the provided results
+        except Exception as e:
+            # Print the error message if any exception occurs
+            print(f"Error occurred: {e}")
+
+    # Render the HTML template with the results
     return render_template_string(form_html, influencer_name=influencer_name, category=category, gender=gender, location=location)
 
-if __name__ == "__main__":
-    # Run the Flask application in debug mode
-    app.run(debug=True)
+if __name__ == '__main__':
+    # Run the Flask application on localhost at port 5000
+    app.run(debug=True, host='0.0.0.0', port=5000)
