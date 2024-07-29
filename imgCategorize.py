@@ -5,6 +5,7 @@ import re
 
 
 
+
 def categorize(saved_images):
     # Step 1: Generate descriptions for each image
     descriptions = []

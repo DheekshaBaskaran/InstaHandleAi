@@ -67,6 +67,7 @@ def run_mistral(user_message, model="mistral-medium"):
         messages=messages
     )
 
+
     # Return the content of the response
     return chat_response.choices[0].message.content
 

@@ -56,6 +56,7 @@ def index():
             # Determine gender based on the aggregated captions
             gender = determine_gender(aggregated_captions)
 
+
             # Determine location based on the aggregated captions
             location = determine_location(aggregated_captions)
 

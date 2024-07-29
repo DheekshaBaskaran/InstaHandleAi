@@ -12,3 +12,4 @@ if __name__ == "__main__":
 
     # Categorize the fetched images using the categorize function
     categorize(saved_images)
+
