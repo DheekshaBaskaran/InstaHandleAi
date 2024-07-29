@@ -9,7 +9,7 @@ import openai
 APIFY_TOKEN = "apify_api_9s3GF9roqPDUGWx6xhVc1V4skwzSSr4yVKJ6"
 
 # OpenAI API key
-OPENAI_API_KEY = "sk-proj-1yjj1KDzDA3Z71HWrQG5T3BlbkFJaIiO46kL1oNV7kOmkdjt"
+OPENAI_API_KEY = ""
 
 # Categories for categorization
 categories = [
