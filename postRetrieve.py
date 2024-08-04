@@ -1,7 +1,5 @@
-
 import requests
 import os
-import shutil
 from apify_client import ApifyClient
 import openai
 
@@ -42,33 +40,7 @@ def fetch_instagram_posts(username, save_directory="temp/images", apify_token=AP
     display_urls = [item["displayUrl"] for item in dataset_items if "displayUrl" in item]
     captions = [item.get("caption", "No caption available.") for item in dataset_items]
 
-    # Comment out the part where images are saved
-    """
-    # Check if the save directory exists, and delete it if it does (makes sure new pics don't get added along with old ones)
-    if os.path.exists(save_directory):
-        shutil.rmtree(save_directory)  # Remove the existing directory and its contents
-
-    # Create a new directory to save the images
-    os.makedirs(save_directory)
-
-    # Initialize a list to keep track of saved image names
-    saved_images = []
-    # Loop through each image URL to download the images
-    for index, url in enumerate(display_urls):
-        image_response = requests.get(url)
-        image_response.raise_for_status()
-
-        # Construct the image name and path for saving
-        image_name = f"{username}_{index + 1}.jpg"
-        image_path = os.path.join(save_directory, image_name)  # Full path to save the image
-
-        with open(image_path, 'wb') as image_file:
-            image_file.write(image_response.content)  # Write the image content to the file
-        saved_images.append(image_name)  # Add the saved image name to the list
-    """
-
     return [], captions  # Return an empty list for saved images and the captions
-
 
 def user_message(inquiry, for_gender=False, for_location=False):
     if for_gender:
@@ -101,7 +73,6 @@ def user_message(inquiry, for_gender=False, for_location=False):
         Inquiry: {inquiry}
         """
 
-
 def run_openai(user_message, model="gpt-4o-mini"):
     """
     Runs the OpenAI chat completion model with the provided user message and model.
@@ -123,7 +94,6 @@ def run_openai(user_message, model="gpt-4o-mini"):
     )
     return response['choices'][0]['message']['content'].strip()
 
-
 def choose_category(input_text):
     """
     Chooses a category for the given input text by running the OpenAI model.
@@ -135,7 +105,6 @@ def choose_category(input_text):
     - str: The chosen category for the input text.
     """
     return run_openai(user_message(input_text))
-
 
 def determine_gender(input_text):
     """
@@ -154,7 +123,6 @@ def determine_gender(input_text):
     else:
         return "Other"
 
-
 def determine_location(input_text):
     """
     Determines the location for the given input text by running the OpenAI model.
@@ -168,23 +136,3 @@ def determine_location(input_text):
     result = run_openai(user_message(input_text, for_location=True))
     # Return the result or "Unknown" if the location is not determined
     return result if result else "Unknown"
-
-
-if __name__ == "__main__":
-    username = input("Enter the Instagram username to scrape: ")  # Prompt the user to enter the Instagram username
-    images, captions = fetch_instagram_posts(username)  # Fetch the Instagram posts (images and captions) for the given username
-
-    # Aggregate all captions into one text
-    aggregated_captions = " ".join(captions)
-
-    # Get a single category for the aggregated captions
-    category = choose_category(aggregated_captions)
-
-    # Determine gender from the aggregated captions
-    gender = determine_gender(aggregated_captions)
-
-    # Determine location from the aggregated captions
-    location = determine_location(aggregated_captions)
-
-    # Print the aggregated captions, the chosen category, the determined gender, and the determined location
-    print(f"Aggregated Captions: {aggregated_captions}\nCategory: {category}\nGender: {gender}\nLocation: {location}")
