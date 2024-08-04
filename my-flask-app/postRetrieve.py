@@ -1,15 +1,12 @@
-import requests
 import os
 from apify_client import ApifyClient
 import openai
 
-# Apify API token
+# Set your Apify and OpenAI API keys
 APIFY_TOKEN = "apify_api_9s3GF9roqPDUGWx6xhVc1V4skwzSSr4yVKJ6"
-
-# OpenAI API key
 OPENAI_API_KEY = os.getenv('api_key')
 
-# Categories for categorization
+# Define the list of categories for classification
 categories = [
     "Fashion", "Food", "Travel", "Fitness", "Photography", "Art", "Beauty",
     "Music", "Health", "Nature", "Pets", "Home Decor", "DIY", "Sports",
@@ -21,27 +18,21 @@ categories = [
     "Community Building", "Entertainment", "Work", "Reviews", "Family"
 ]
 
+# Fetch Instagram posts for a given username
 def fetch_instagram_posts(username, save_directory="temp/images", apify_token=APIFY_TOKEN):
     client = ApifyClient(apify_token)
-
-    # Prepare the input parameters for the Instagram Scraper
     input_params = {
-        "directUrls": [f"https://www.instagram.com/{username}/"],  # URL of the Instagram profile
-        "resultsLimit": 5,  # Limit the number of posts to scrape
-        "resultsType": "posts",  # Specify that we want posts
+        "directUrls": [f"https://www.instagram.com/{username}/"],
+        "resultsLimit": 5,
+        "resultsType": "posts",
     }
-
-    # Run Apify actor
     run = client.actor("apify/instagram-scraper").call(run_input=input_params)
-
     dataset_items = client.dataset(run["defaultDatasetId"]).list_items().items
-
-    # Extract the display URLs of the images from the dataset items
     display_urls = [item["displayUrl"] for item in dataset_items if "displayUrl" in item]
     captions = [item.get("caption", "No caption available.") for item in dataset_items]
+    return [], captions
 
-    return [], captions  # Return an empty list for saved images and the captions
-
+# Generate the user message for OpenAI
 def user_message(inquiry, for_gender=False, for_location=False):
     if for_gender:
         return f"""
@@ -73,18 +64,9 @@ def user_message(inquiry, for_gender=False, for_location=False):
         Inquiry: {inquiry}
         """
 
+# Run the OpenAI model with the given message
 def run_openai(user_message, model="gpt-4o-mini"):
-    """
-    Runs the OpenAI chat completion model with the provided user message and model.
-
-    Parameters:
-    - user_message (str): The message to be processed by the OpenAI.
-    - model (str): The model to be used for the chat completion (default is "gpt-4").
-
-    Returns:
-    - str: The content of the chat response.
-    """
-    openai.api_key = OPENAI_API_KEY  # Set the OpenAI API key
+    openai.api_key = OPENAI_API_KEY
     response = openai.ChatCompletion.create(
         model=model,
         messages=[
@@ -94,45 +76,19 @@ def run_openai(user_message, model="gpt-4o-mini"):
     )
     return response['choices'][0]['message']['content'].strip()
 
+# Choose a category for the given input text
 def choose_category(input_text):
-    """
-    Chooses a category for the given input text by running the OpenAI model.
-
-    Parameters:
-    - input_text (str): The input text to be categorized.
-
-    Returns:
-    - str: The chosen category for the input text.
-    """
     return run_openai(user_message(input_text))
 
+# Determine the gender for the given input text
 def determine_gender(input_text):
-    """
-    Determines the gender for the given input text by running the OpenAI model.
-
-    Parameters:
-    - input_text (str): The input text to determine gender.
-
-    Returns:
-    - str: The determined gender for the input text, or "Other" if no gender is determined.
-    """
     result = run_openai(user_message(input_text, for_gender=True))
-    # Validate and return the gender or "Other" if the result is not valid
     if result in ["Male", "Female"]:
         return result
     else:
         return "Other"
 
+# Determine the location for the given input text
 def determine_location(input_text):
-    """
-    Determines the location for the given input text by running the OpenAI model.
-
-    Parameters:
-    - input_text (str): The input text to determine location.
-
-    Returns:
-    - str: The determined location for the input text, or "Unknown" if no location is determined.
-    """
     result = run_openai(user_message(input_text, for_location=True))
-    # Return the result or "Unknown" if the location is not determined
     return result if result else "Unknown"

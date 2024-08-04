@@ -1,9 +1,6 @@
 from textCategortization import chooseCategory
 from imgDesc import query
 import os
-import re
-
-
 
 
 def categorize(saved_images):
